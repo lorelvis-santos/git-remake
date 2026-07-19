@@ -1,8 +1,9 @@
 #include "GitBlob.h"
 #include <cstdio>
+#include <cstdlib>
 
 int main() {
-  GitBlob blob(".ignore/test.txt");
+  GitBlob blob("test.txt");
 
   if (!blob.is_valid()) {
     printf("El blob no es válido\n");
@@ -21,8 +22,11 @@ int main() {
       printf("%c", data[i]);
     }
   }
-
   printf("\n");
+
+  char* hash = (char*)malloc(65);
+  blob.get_hash(hash);
+  printf("hash: %s\n", hash);
 
   return 0;
 }

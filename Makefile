@@ -16,7 +16,7 @@ all: dir $(TARGET)
 
 # Ensamble final
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lcrypto
 
 # Compilación de Archivos Intermedios (.o)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp

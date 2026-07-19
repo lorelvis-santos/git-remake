@@ -5,6 +5,8 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
+#include <openssl/evp.h>
+#include <cstdint>
 
 // Helpers que despues seran refactorizados ===================
 
@@ -32,11 +34,43 @@ int write_bytes_into_buffer_from_file(char* buffer, uint64_t size, const char* p
   return 0;
 }
 
+int compute_sha256(const char *string, unsigned char *output_hash, size_t size) {
+  EVP_MD_CTX *context = EVP_MD_CTX_new();
+  unsigned int internal_length;
+
+  if (context == NULL) {
+    return 1;
+  }
+
+  // Initialize the context with SHA-256 algorithm
+  if (!EVP_DigestInit_ex(context, EVP_sha256(), NULL)) {
+    EVP_MD_CTX_free(context);
+    return 1;
+  }
+
+  // Pass the data to be hashed
+  if (!EVP_DigestUpdate(context, string, size)) {
+    EVP_MD_CTX_free(context);
+    return 1;
+  }
+
+  // Finalize the hash computation
+  if (!EVP_DigestFinal_ex(context, output_hash, &internal_length)) {
+    EVP_MD_CTX_free(context);
+    return 1;
+  }
+
+  // Clean up allocated context memory
+  EVP_MD_CTX_free(context);
+  return 0;
+}
+
 // Fin de helpers =============================================
 
 GitBlob::GitBlob(const char* path) {
   this->data = nullptr;
   this->size = 0;
+  memset(this->hash, 0, sizeof(this->hash));
 
   char header[32];
   off64_t file_size = get_bytes_count_from_file(path);
@@ -61,9 +95,26 @@ GitBlob::GitBlob(const char* path) {
 
   // Ahora leemos el archivo en cuestion
   write_bytes_into_buffer_from_file(this->data + bytes_written + 1, file_size, path);
+
+  int error = compute_sha256(this->data, this->hash, this->size);
+
+  printf("error: %d\n", error);
+
+  if (error == 1) {
+    free(this->data);
+    this->data = nullptr;
+    this->size = 0;
+  }
 }
 
 GitBlob::~GitBlob() {
   free(this->data);
+  this->data = nullptr;
   this->size = 0;
+}
+
+void GitBlob::get_hash(char* output) const {
+  for (int i = 0; i < 32; i++) {
+    snprintf(output + 2*i, 3, "%02x", this->hash[i]);
+  }
 }
