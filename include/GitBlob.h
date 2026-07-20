@@ -2,30 +2,25 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
+#include <array>
+#include <string>
 
 class GitBlob {
   private:
-    char* data;
-    size_t size;
-    uint8_t hash[32];
+    std::vector<uint8_t> data;
+    std::array<uint8_t, 32> hash;
 
   public:
-    GitBlob(const char* path);
-    ~GitBlob();
+    GitBlob(const std::string_view path);
 
-
-    const char* get_data() const {
+    const std::vector<uint8_t>& get_data() const {
       return this->data;
     }
-
-    size_t get_size() const {
-      return this->size;
-    }
     
-    void get_hash(char* output) const;
+    std::string get_hash() const;
 
     bool is_valid() const {
-      return this->data != nullptr;
+      return !this->data.empty();
     }
-
 };

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <openssl/evp.h>
 #include <cstdint>
+#include <zlib.h>
 
 // Helpers que despues seran refactorizados ===================
 
@@ -65,6 +66,25 @@ int compute_sha256(const char *string, unsigned char *output_hash, size_t size) 
   return 0;
 }
 
+int compress_blob(unsigned char** output, const char* source, uLong source_len) {
+  // Calculamos el máximo tamaño que puede ocupar el source_len de forma comprimida
+  uLong dest_len = compressBound(source_len);
+  
+  // Alojamos la memoria en base a eso
+  *output = (unsigned char*)malloc(dest_len);
+
+  // Comprimimos
+  if (compress(*output, &dest_len, (const unsigned char*)source, source_len) != Z_OK) {
+    printf("Compression failed.\n");
+    return 1;
+  }
+
+  printf("Compression successful!\n");
+  printf("Original size: %lu bytes -> Compressed size: %lu bytes\n", source_len, dest_len);
+
+  return 0;
+}
+
 // Fin de helpers =============================================
 
 GitBlob::GitBlob(const char* path) {
@@ -98,19 +118,15 @@ GitBlob::GitBlob(const char* path) {
 
   int error = compute_sha256(this->data, this->hash, this->size);
 
-  printf("error: %d\n", error);
-
   if (error == 1) {
     free(this->data);
     this->data = nullptr;
     this->size = 0;
   }
-}
 
-GitBlob::~GitBlob() {
-  free(this->data);
-  this->data = nullptr;
-  this->size = 0;
+  // Ahora toca comprimir el contenido
+  // unsigned char* compressed_blob = (unsigned char*)malloc(0);
+  // compress_blob(&compressed_blob, this->data, this->size);
 }
 
 void GitBlob::get_hash(char* output) const {
