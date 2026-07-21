@@ -1,136 +1,65 @@
 #include "GitBlob.h"
-#include <cstdio>
-#include <sys/stat.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <string.h>
-#include <stdlib.h>
-#include <openssl/evp.h>
-#include <cstdint>
+#include "FileSystem.h"
+#include "Crypto.h"
+#include <iostream>
 #include <zlib.h>
+#include <sstream>
+#include <iomanip>
+#include <string>
+#include <algorithm>
+#include <optional>
 
-// Helpers que despues seran refactorizados ===================
-
-off64_t get_bytes_count_from_file(const char* path) {
-  struct stat metadata;
-
-  if (stat(path, &metadata) != 0) {
-    return -1;
-  }
-
-  return metadata.st_size;
-}
-
-int write_bytes_into_buffer_from_file(char* buffer, uint64_t size, const char* path) {
-  FILE *file_ptr = fopen(path, "rb");
-
-  if (file_ptr == NULL) {
-    return 1;
-  }
-
-  fread(buffer, size, 1, file_ptr);
-
-  fclose(file_ptr);
-
-  return 0;
-}
-
-int compute_sha256(const char *string, unsigned char *output_hash, size_t size) {
-  EVP_MD_CTX *context = EVP_MD_CTX_new();
-  unsigned int internal_length;
-
-  if (context == NULL) {
-    return 1;
-  }
-
-  // Initialize the context with SHA-256 algorithm
-  if (!EVP_DigestInit_ex(context, EVP_sha256(), NULL)) {
-    EVP_MD_CTX_free(context);
-    return 1;
-  }
-
-  // Pass the data to be hashed
-  if (!EVP_DigestUpdate(context, string, size)) {
-    EVP_MD_CTX_free(context);
-    return 1;
-  }
-
-  // Finalize the hash computation
-  if (!EVP_DigestFinal_ex(context, output_hash, &internal_length)) {
-    EVP_MD_CTX_free(context);
-    return 1;
-  }
-
-  // Clean up allocated context memory
-  EVP_MD_CTX_free(context);
-  return 0;
-}
-
-int compress_blob(unsigned char** output, const char* source, uLong source_len) {
-  // Calculamos el máximo tamaño que puede ocupar el source_len de forma comprimida
-  uLong dest_len = compressBound(source_len);
+// int compress_blob(unsigned char** output, const char* source, uLong source_len) {
+//   // Calculamos el máximo tamaño que puede ocupar el source_len de forma comprimida
+//   uLong dest_len = compressBound(source_len);
   
-  // Alojamos la memoria en base a eso
-  *output = (unsigned char*)malloc(dest_len);
+//   // Alojamos la memoria en base a eso
+//   *output = (unsigned char*)malloc(dest_len);
 
-  // Comprimimos
-  if (compress(*output, &dest_len, (const unsigned char*)source, source_len) != Z_OK) {
-    printf("Compression failed.\n");
-    return 1;
-  }
+//   // Comprimimos
+//   if (compress(*output, &dest_len, (const unsigned char*)source, source_len) != Z_OK) {
+//     printf("Compression failed.\n");
+//     return false;
+//   }
 
-  printf("Compression successful!\n");
-  printf("Original size: %lu bytes -> Compressed size: %lu bytes\n", source_len, dest_len);
+//   printf("Compression successful!\n");
+//   printf("Original size: %lu bytes -> Compressed size: %lu bytes\n", source_len, dest_len);
 
-  return 0;
-}
+//   return 0;
+// }
 
-// Fin de helpers =============================================
-
-GitBlob::GitBlob(const char* path) {
-  this->data = nullptr;
-  this->size = 0;
-  memset(this->hash, 0, sizeof(this->hash));
-
-  char header[32];
-  off64_t file_size = get_bytes_count_from_file(path);
-
-  if (file_size == -1) {
-    printf("File doesn't exist\n");
+GitBlob::GitBlob(const std::string_view path) {
+  // Aqui leemos el archivo directamente con nuestra utilidad de FileSystem...
+  std::vector file = FileSystem::read_file(path);
+  
+  if (file.empty()) {
+    std::cerr << "El archivo " << path << " no pudo ser abierto.\n";
     return;
   }
+  
+  std::string header = "blob " + std::to_string(file.size());
+  
+  this->data.assign(header.begin(), header.end());
+  this->data.push_back('\0');
+  this->data.insert(data.end(), file.begin(), file.end());
 
-  size_t bytes_written = snprintf(header, sizeof(header), "blob %" PRIu64, (uint64_t)file_size);
-  this->size = bytes_written + file_size + 1; // Agregamos un byte de mas por el byte nulo '\0'
+  std::optional<std::array<uint8_t, 32>> hash = Crypto::sha256(data.data(), data.size());
 
-  this->data = (char*) malloc(this->size);
-
-  if (this->data == nullptr) {
-    printf("Memory not allocated\n");
-    return;
+  if (!hash) {
+    this->data.clear();
   }
 
-  // Aplicamos la logica de memcpy.cpp
-  memcpy(this->data, header, bytes_written + 1);
-
-  // Ahora leemos el archivo en cuestion
-  write_bytes_into_buffer_from_file(this->data + bytes_written + 1, file_size, path);
-
-  int error = compute_sha256(this->data, this->hash, this->size);
-
-  if (error == 1) {
-    free(this->data);
-    this->data = nullptr;
-    this->size = 0;
-  }
+  this->hash = hash.value();
 
   // Ahora toca comprimir el contenido
   // unsigned char* compressed_blob = (unsigned char*)malloc(0);
   // compress_blob(&compressed_blob, this->data, this->size);
 }
 
-void GitBlob::get_hash(char* output) const {
-  for (int i = 0; i < 32; i++) {
-    snprintf(output + 2*i, 3, "%02x", this->hash[i]);
+std::string GitBlob::get_hash() const {
+  std::stringstream ss;
+  for (unsigned int i = 0; i < 32; ++i) {
+    ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
   }
+  return ss.str();
 }
