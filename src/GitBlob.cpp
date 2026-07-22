@@ -11,12 +11,14 @@
 
 GitBlob::GitBlob(const std::string_view path) {
   // Aqui leemos el archivo directamente con nuestra utilidad de FileSystem...
-  std::vector file = FileSystem::read_file(path);
-  
-  if (file.empty()) {
+  std::optional<std::vector<uint8_t>> result = FileSystem::read_file(path);
+
+  if (!result) {
     std::cerr << "El archivo " << path << " no pudo ser abierto.\n";
     return;
   }
+  
+  std::vector<uint8_t> file = result.value();
   
   std::string header = "blob " + std::to_string(file.size());
   
@@ -44,6 +46,15 @@ GitBlob::GitBlob(const std::string_view path) {
   }
 
   std::cout << "Se comprimió el archivo " << path << " de " << this->data.size() << " bytes a " << compressed.value().size() << " bytes\n";
+
+  if (!FileSystem::write_object(this->get_hash(), compressed.value())) {
+    std::cout << "No se pudo persistir el blob\n";
+    this->data.clear();
+    this->hash.fill(0);
+    return;
+  }
+
+  std::cout << get_hash() << std::endl;
 }
 
 std::string GitBlob::get_hash() const {
