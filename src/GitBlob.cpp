@@ -1,32 +1,13 @@
 #include "GitBlob.h"
 #include "FileSystem.h"
 #include "Crypto.h"
+#include "Compression.h"
 #include <iostream>
-#include <zlib.h>
 #include <sstream>
 #include <iomanip>
 #include <string>
 #include <algorithm>
 #include <optional>
-
-// int compress_blob(unsigned char** output, const char* source, uLong source_len) {
-//   // Calculamos el máximo tamaño que puede ocupar el source_len de forma comprimida
-//   uLong dest_len = compressBound(source_len);
-  
-//   // Alojamos la memoria en base a eso
-//   *output = (unsigned char*)malloc(dest_len);
-
-//   // Comprimimos
-//   if (compress(*output, &dest_len, (const unsigned char*)source, source_len) != Z_OK) {
-//     printf("Compression failed.\n");
-//     return false;
-//   }
-
-//   printf("Compression successful!\n");
-//   printf("Original size: %lu bytes -> Compressed size: %lu bytes\n", source_len, dest_len);
-
-//   return 0;
-// }
 
 GitBlob::GitBlob(const std::string_view path) {
   // Aqui leemos el archivo directamente con nuestra utilidad de FileSystem...
@@ -47,13 +28,22 @@ GitBlob::GitBlob(const std::string_view path) {
 
   if (!hash) {
     this->data.clear();
+    return;
   }
 
   this->hash = hash.value();
 
   // Ahora toca comprimir el contenido
-  // unsigned char* compressed_blob = (unsigned char*)malloc(0);
-  // compress_blob(&compressed_blob, this->data, this->size);
+  std::optional<std::vector<uint8_t>> compressed = Compression::compress_blob(this->data.data(), this->data.size());
+
+  if (!compressed) {
+    std::cout << "No se pudo comprimir el blob\n";
+    this->data.clear();
+    this->hash.fill(0);
+    return;
+  }
+
+  std::cout << "Se comprimió el archivo " << path << " de " << this->data.size() << " bytes a " << compressed.value().size() << " bytes\n";
 }
 
 std::string GitBlob::get_hash() const {

@@ -32,5 +32,5 @@ namespace Crypto {
     std::copy(std::begin(hash), hash + length, bytes.begin());
     
     return bytes;
-}
+  }
 }
