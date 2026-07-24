@@ -28,4 +28,4 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # Regla de Limpieza
 clean:
-	rm -rf $(BUILD_DIR)/*.o $(TARGET)
+	rm -rf $(BUILD_DIR) $(TARGET)
