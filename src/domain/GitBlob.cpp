@@ -17,13 +17,18 @@ GitBlob::GitBlob(const std::string_view path) {
     return;
   }
   
-  std::vector<uint8_t> file = result.value();
+  std::vector<uint8_t> file = std::move(result.value());
   
   std::string header = "blob " + std::to_string(file.size());
   
+  this->data.reserve(header.size() + file.size() + 1);
   this->data.assign(header.begin(), header.end());
   this->data.push_back('\0');
-  this->data.insert(data.end(), file.begin(), file.end());
+  this->data.insert(
+    this->data.end(),
+    std::make_move_iterator(file.begin()),
+    std::make_move_iterator(file.end())
+  );
 
   std::optional<std::array<uint8_t, 32>> hash = Crypto::sha256(data.data(), data.size());
 
