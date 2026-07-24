@@ -1,37 +1,48 @@
-#include "GitBlob.h"
+#include "domain/GitBlob.h"
+#include "cli/CommandFactory.h"
+#include "commands/HashObjectCommand.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <string>
+#include <vector>
+#include <string>
 
-int main() {
-  std::string_view path = "src/main.cpp";
-  GitBlob blob(path);
-
-  if (!blob.is_valid()) {
-    std::cerr << "El blob no es válido" << std::endl;
+int main(int argc, char** argv) {
+  if (argc < 3) {
+    // Esto es solamente para el comando de hash-object, luego
+    // lo adaptare mejor
+    std::cout << "Usage: " << argv[0] << " <command> <path>\n";
     return 1;
   }
 
-  std::cout << "Blob de " << path << ":\n" << std::string(blob.get_data().begin(), blob.get_data().end()) << std::endl;
-  std::cout << "Hash de " << path << ":\n" << blob.get_hash() << std::endl;
+  // Registro del comando
+  CommandFactory::register_command("hash-object", []() {
+    return std::make_unique<HashObjectCommand>();
+  });
 
-  // printf("Tamaño del blob en bytes: %lu\n", blob.get_size());
-  // printf("Contenido del blob:\n");
+  auto command = CommandFactory::create(argv[1]);
 
-  // const char* data = blob.get_data();
+  if (!command) {
+    std::cerr << "Unknown command\n";
+    return 1;
+  }
 
-  // for (size_t i = 0; i < blob.get_size(); i++) {
-  //   if (data[i] == '\0') {
-  //     printf("\\0");
-  //   } else {
-  //     printf("%c", data[i]);
-  //   }
+  // sumamos uno para omitir el nombre del ejecutable y el comando
+  std::vector<std::string_view> args(argv + 2, argv + argc);
+  
+  command->execute(args); // TODO: Manejar el retorno del execute
+
+  // std::string_view path = "src/main.cpp";
+  // GitBlob blob(path);
+
+  // if (!blob.is_valid()) {
+  //   std::cerr << "El blob no es válido" << std::endl;
+  //   return 1;
   // }
-  // printf("\n");
 
-  // char* hash = (char*)malloc(65);
-  // blob.get_hash(hash);
-  // printf("hash: %s\n", hash);
+  // std::cout << "Blob de " << path << ":\n" << std::string(blob.get_data().begin(), blob.get_data().end()) << std::endl;
+  // std::cout << "Hash de " << path << ":\n" << blob.get_hash() << std::endl;
 
   return 0;
 }
