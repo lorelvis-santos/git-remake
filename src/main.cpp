@@ -1,6 +1,7 @@
 #include "domain/GitBlob.h"
 #include "cli/CommandFactory.h"
 #include "commands/HashObjectCommand.h"
+#include "commands/CatFileCommand.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -19,6 +20,10 @@ int main(int argc, char** argv) {
   // Registro del comando
   CommandFactory::register_command("hash-object", []() {
     return std::make_unique<HashObjectCommand>();
+  });
+
+  CommandFactory::register_command("cat-file", []() {
+    return std::make_unique<CatFileCommand>();
   });
 
   auto command = CommandFactory::create(argv[1]);
