@@ -13,11 +13,7 @@ namespace fs = std::filesystem;
 
 namespace FileSystem {
   // Función para leer los bytes de un archivo
-  std::optional<std::vector<uint8_t>> read_file(const std::string_view path) {
-    return read_file(fs::path(path));
-  }
-
-  std::optional<std::vector<uint8_t>> read_file(const fs::path path) {
+  std::optional<std::vector<uint8_t>> read_file(const fs::path& path) {
     // std::ios::ate pone el cursor al final del archivo
     // la idea es contar los bytes que hay para reservar el espacio del vector
     // y luego poder leerlo todo
