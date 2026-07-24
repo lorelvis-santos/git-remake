@@ -1,30 +1,30 @@
 # Variables de configuracion
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude
+LDFLAGS = -lcrypto -lz
 
 # Rutas y archivos
 SRC_DIR = src
 BUILD_DIR = build
-TARGET = git-rk
 
-# Busqueda automatica de archivos
-SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+# Búsqueda recursiva de archivos fuente
+SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
+
+# Mapeo de rutas de src/*.cpp a build/*.o
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 # Regla principal
-all: dir $(TARGET)
+TARGET = gitrk
+all: $(TARGET)
 
 # Ensamble final
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lcrypto -lz
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Compilación de Archivos Intermedios (.o)
+# Creación dinámica de directorios y compilación de objetos
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Regla de Utilidad: Crear carpeta build
-dir:
-	mkdir -p $(BUILD_DIR)
 
 # Regla de Limpieza
 clean:

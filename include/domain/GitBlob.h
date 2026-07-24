@@ -23,4 +23,6 @@ class GitBlob {
     bool is_valid() const {
       return !this->data.empty();
     }
+
+    bool save() const;
 };

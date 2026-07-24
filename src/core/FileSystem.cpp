@@ -1,4 +1,4 @@
-#include "FileSystem.h"
+#include "core/FileSystem.h"
 #include <fstream>
 #include <vector>
 #include <iostream>
@@ -29,7 +29,7 @@ namespace FileSystem {
     std::vector<uint8_t> buffer(size);
 
     if (file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-      std::cout << "Archivo leido correctamente. Bytes obtenidos: " << buffer.size() << "\n";
+      // std::cout << "Archivo leido correctamente. Bytes obtenidos: " << buffer.size() << "\n";
     }
 
     return buffer;
@@ -40,7 +40,7 @@ namespace FileSystem {
     // Pasos para escribir el object
     
     // path base, esto hay que refactorizarlo
-    fs::path dir(".git-rk/objects");
+    fs::path dir(".gitrk/objects");
 
     // separar las primeras dos letras del resto del hash.
     std::string hash_start = hash.substr(0, 2);

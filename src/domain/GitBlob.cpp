@@ -1,7 +1,7 @@
-#include "GitBlob.h"
-#include "FileSystem.h"
-#include "Crypto.h"
-#include "Compression.h"
+#include "domain/GitBlob.h"
+#include "core/FileSystem.h"
+#include "core/Crypto.h"
+#include "core/Compression.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -14,7 +14,6 @@ GitBlob::GitBlob(const std::string_view path) {
   std::optional<std::vector<uint8_t>> result = FileSystem::read_file(path);
 
   if (!result) {
-    std::cerr << "El archivo " << path << " no pudo ser abierto.\n";
     return;
   }
   
@@ -34,27 +33,23 @@ GitBlob::GitBlob(const std::string_view path) {
   }
 
   this->hash = hash.value();
+}
 
+bool GitBlob::save() const { 
   // Ahora toca comprimir el contenido
   std::optional<std::vector<uint8_t>> compressed = Compression::compress_blob(this->data.data(), this->data.size());
 
   if (!compressed) {
-    std::cout << "No se pudo comprimir el blob\n";
-    this->data.clear();
-    this->hash.fill(0);
-    return;
+    return false;
   }
 
-  std::cout << "Se comprimió el archivo " << path << " de " << this->data.size() << " bytes a " << compressed.value().size() << " bytes\n";
+  // std::cout << "Se comprimió el archivo de " << this->data.size() << " bytes a " << compressed.value().size() << " bytes\n";
 
   if (!FileSystem::write_object(this->get_hash(), compressed.value())) {
-    std::cout << "No se pudo persistir el blob\n";
-    this->data.clear();
-    this->hash.fill(0);
-    return;
+    return false;
   }
 
-  std::cout << get_hash() << std::endl;
+  return true;
 }
 
 std::string GitBlob::get_hash() const {
