@@ -8,4 +8,5 @@
 
 namespace Compression {
   std::optional<std::vector<uint8_t>> compress_blob(const unsigned char* source, uLong source_len);
+  std::optional<std::vector<uint8_t>> decompress_blob(const std::vector<uint8_t>& compressed_data);
 }
