@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <cstring>
+#include <charconv>
 
 namespace Compression {
   std::optional<std::vector<uint8_t>> compress_blob(const unsigned char* source, uLong source_len) {
@@ -40,29 +41,69 @@ namespace Compression {
       return std::nullopt;
     }
 
-    // TODO: extraer el tamaño de bytes de la cabecera del blob para
-    // hacer un reserve en uncompressed, asi optimizamos la memoria
     std::vector<uint8_t> uncompressed;
     uint8_t buffer[4096];
 
     int ret;
-    // Decompress chunk by chunk loop
-    do {
+
+    auto decompress_chunk = [&](int flush_mode) -> int {
       stream.next_out = reinterpret_cast<Bytef*>(buffer);
       stream.avail_out = sizeof(buffer);
-
-      ret = inflate(&stream, Z_NO_FLUSH);
+      
+      int ret = inflate(&stream, flush_mode);
       
       if (ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
-          inflateEnd(&stream);
-          return std::nullopt;
+        return -1;
+      }
+
+      return ret;
+    };
+
+    ret = decompress_chunk(Z_NO_FLUSH);
+    
+    if (ret == -1) {
+      inflateEnd(&stream);
+      return std::nullopt;
+    }
+
+    // Calculate how much data was generated in this step
+    size_t have = sizeof(buffer) - stream.avail_out;
+
+    // Alojamos la memoria necesaria para el vector
+    uint8_t* null_byte_ptr = (uint8_t*)std::memchr(buffer, '\0', have);
+    uint8_t* space_byte_ptr = (uint8_t*)std::memchr(buffer, ' ', have);
+
+    if (null_byte_ptr != nullptr && space_byte_ptr != nullptr) {
+      size_t null_index = null_byte_ptr - buffer;
+      size_t space_index = space_byte_ptr - buffer;
+      size_t memory_to_allocate;
+
+      const char* start_ptr = reinterpret_cast<const char*>(buffer + space_index + 1);
+      const char* end_ptr = reinterpret_cast<const char*>(buffer + null_index);
+
+      std::from_chars_result result = std::from_chars(start_ptr, end_ptr, memory_to_allocate);
+
+      if (result.ec == std::errc()) {
+        uncompressed.reserve(memory_to_allocate + null_index + 1);
+      }
+    }
+
+    uncompressed.insert(uncompressed.end(), buffer, buffer + have);
+
+    // Decompress chunk by chunk loop
+    while (ret != Z_STREAM_END) {
+      ret = decompress_chunk(Z_NO_FLUSH);
+      
+      if (ret == -1) {
+        inflateEnd(&stream);
+        return std::nullopt;
       }
 
       // Calculate how much data was generated in this step
       size_t have = sizeof(buffer) - stream.avail_out;
       uncompressed.insert(uncompressed.end(), buffer, buffer + have);
 
-    } while (ret != Z_STREAM_END);
+    }
 
     // Clean up zlib resources
     inflateEnd(&stream);
