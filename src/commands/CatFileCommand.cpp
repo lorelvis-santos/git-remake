@@ -5,10 +5,14 @@
 #include <vector>
 #include <cstdint>
 #include <iostream>
+#include <algorithm>
 
-// TODO: optimizar para que hayan busquedas en base a un hash de min 4 caracteres
 int CatFileCommand::execute(const std::vector<std::string_view>& args) {
-  std::string hash = "c0a56d50b43e3810bd0eb393da305b3202e4e457594d8d8d6acc51d70ec37580";
+  if (args.empty() || args[0].size() < 4) {
+    return 1;
+  }
+
+  std::string hash(args[0]);
 
   std::optional<std::vector<uint8_t>> result = FileSystem::read_object(hash);
 
@@ -26,8 +30,15 @@ int CatFileCommand::execute(const std::vector<std::string_view>& args) {
 
   std::vector<uint8_t> bytes = decompressed_data.value();
 
-  std::cout << bytes.size() << std::endl;
-  std::cout << std::string(bytes.begin(), bytes.end()) << std::endl;
+  auto it = std::find(bytes.begin(), bytes.end(), '\0');
+
+  if (it != bytes.end()) {
+    // Para omitir el byte nulo
+    auto payload_start = it + 1;
+    size_t payload_size = std::distance(payload_start, bytes.end());
+    std::cout.write(reinterpret_cast<const char*>(&*payload_start), payload_size);
+    std::cout << '\n';
+  }
 
   return 0;
 }
