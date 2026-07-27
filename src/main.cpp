@@ -1,5 +1,7 @@
 #include "domain/GitBlob.h"
 #include "cli/CommandFactory.h"
+#include "cli/ArgumentParser.h"
+#include "cli/ArgumentValidation.h"
 #include "commands/HashObjectCommand.h"
 #include "commands/CatFileCommand.h"
 #include <cstdio>
@@ -8,6 +10,22 @@
 #include <string>
 #include <vector>
 #include <string>
+
+constexpr std::string_view to_string(ArgumentValidation::ValidationError error) {
+    switch (error) {
+        case ArgumentValidation::ValidationError::None:                return "None";
+        case ArgumentValidation::ValidationError::MissingOption:       return "MissingOption";
+        case ArgumentValidation::ValidationError::InvalidOption:       return "InvalidOption";
+        case ArgumentValidation::ValidationError::InvalidFlag:         return "InvalidFlag";
+        case ArgumentValidation::ValidationError::InvalidOperandCount: return "InvalidOperandCount";
+        default:                                   return "UnknownError";
+    }
+}
+
+// Sobrecarga opcional para usar directamente con std::cout
+std::ostream& operator<<(std::ostream& os, ArgumentValidation::ValidationError error) {
+    return os << to_string(error);
+}
 
 int main(int argc, char** argv) {
   if (argc < 3) {
@@ -34,8 +52,22 @@ int main(int argc, char** argv) {
   }
 
   // sumamos uno para omitir el nombre del ejecutable y el comando
-  std::vector<std::string_view> args(argv + 2, argv + argc);
+  std::vector<std::string_view> raw_args(argv + 2, argv + argc);
   
+  CommandArguments args = ArgumentParser::parse(raw_args);
+  
+  auto validation = ArgumentValidation::validate(command->get_command_spec(), args);
+
+  if (!validation.is_valid) {
+    std::cerr << "Hubo un error de validación al ejecutar el comando: " << argv[1] << "\n\n";
+    std::cout << "Detalles del error:\n";
+    std::cout << "\t- Tipo de error: " << validation.error << "\n";
+    std::cout << "\t- Referencia del error: " << validation.argument_reference << "\n";
+    std::cout << "\t- Mensaje del error: " << validation.message << "\n";
+    
+    return 1;
+  }
+
   command->execute(args); // TODO: Manejar el retorno del execute
 
   // std::string_view path = "src/main.cpp";

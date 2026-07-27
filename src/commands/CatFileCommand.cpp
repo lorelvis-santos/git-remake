@@ -7,36 +7,27 @@
 #include <iostream>
 #include <algorithm>
 
-// tmp
-#include "cli/ArgumentParser.h"
-namespace ap = ArgumentParser;
+CommandSpec CatFileCommand::get_command_spec() const {
+  return {
+    {},
+    {},
+    1,
+    1
+  };
+}
 
-int CatFileCommand::execute(const std::vector<std::string_view>& args) {
-  if (args.empty() || args[0].size() < 4) {
+int CatFileCommand::execute(const CommandArguments& args) {
+  auto hash_operand = args.get_operand(0);
+
+  if (!hash_operand) {
     return 1;
   }
 
-  auto parsed_args = ap::parse(args);
-
-  std::cout << "Flags: \n";
-
-  for (auto item : parsed_args.flags) {
-    std::cout << item << "\n";
+  std::string hash(hash_operand.value());
+  
+  if (args.operands.empty() || args.operands[0].size() < 4) {
+    return 1;
   }
-
-  std::cout << "\nOptions: \n";
-
-  for (auto item : parsed_args.options) {
-    std::cout << item.first << ": " << item.second << "\n";
-  }
-
-  std::cout << "\nOperands: \n";
-
-  for (auto item : parsed_args.operands) {
-    std::cout << item << "\n";
-  }
-
-  std::string hash(args[0]);
 
   std::optional<std::vector<uint8_t>> result = FileSystem::read_object(hash);
 

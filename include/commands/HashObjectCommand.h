@@ -4,6 +4,7 @@
 
 class HashObjectCommand : public ICommand {
   public:
-    int execute(const std::vector<std::string_view>& args) override;
+    int execute(const CommandArguments& args) override;
+    CommandSpec get_command_spec() const override;
 };
 

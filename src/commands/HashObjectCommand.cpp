@@ -6,28 +6,28 @@
 
 namespace str = StringUtils;
 
-int HashObjectCommand::execute(const std::vector<std::string_view>& args) {
-  std::string_view path;
+CommandSpec HashObjectCommand::get_command_spec() const {
+  return {
+    {"w", "write"},
+    {},
+    1,
+    1
+  };
+}
+
+int HashObjectCommand::execute(const CommandArguments& args) {
+  auto result = args.get_operand(0);
+
+  if (!result) {
+    return 1;
+  }
+
+  std::string_view path = result.value();
+
   bool save_blob = false;
-
-  for (auto it = args.begin(); it != args.end(); ++it) {
-    // TODO: Organizar esto mejor. El fin seria que lo de los argumentos sea mas organizado y automatizado.
-    if (str::starts_with(*it, "-")) {
-      if (*it == "-w" || *it == "--write") {
-        save_blob = true;
-        continue;
-      }
-
-      std::cerr << "Argumento inválido, solo permitido: -w o --write" << std::endl;
-      return 1;
-    }
-
-    if (!path.empty()) {
-      std::cerr << "Se ha proporcionado más de una ruta" << std::endl;
-      return 1;
-    }
-
-    path = *it;
+  
+  if (args.has_flag("w") || args.has_flag("write")) {
+    save_blob = true;
   }
 
   if (path.empty()) {
