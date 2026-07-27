@@ -7,10 +7,16 @@
 #include <iostream>
 #include <algorithm>
 
+// tmp
+#include "cli/ArgumentParser.h"
+namespace ap = ArgumentParser;
+
 int CatFileCommand::execute(const std::vector<std::string_view>& args) {
   if (args.empty() || args[0].size() < 4) {
     return 1;
   }
+
+  ap::parse(args);
 
   std::string hash(args[0]);
 
