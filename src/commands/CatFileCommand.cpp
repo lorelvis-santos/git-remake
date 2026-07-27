@@ -16,7 +16,25 @@ int CatFileCommand::execute(const std::vector<std::string_view>& args) {
     return 1;
   }
 
-  ap::parse(args);
+  auto parsed_args = ap::parse(args);
+
+  std::cout << "Flags: \n";
+
+  for (auto item : parsed_args.flags) {
+    std::cout << item << "\n";
+  }
+
+  std::cout << "\nOptions: \n";
+
+  for (auto item : parsed_args.options) {
+    std::cout << item.first << ": " << item.second << "\n";
+  }
+
+  std::cout << "\nOperands: \n";
+
+  for (auto item : parsed_args.operands) {
+    std::cout << item << "\n";
+  }
 
   std::string hash(args[0]);
 
