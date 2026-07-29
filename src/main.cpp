@@ -28,10 +28,8 @@ std::ostream& operator<<(std::ostream& os, ArgumentValidation::ValidationError e
 }
 
 int main(int argc, char** argv) {
-  if (argc < 3) {
-    // Esto es solamente para el comando de hash-object, luego
-    // lo adaptare mejor
-    std::cout << "Usage: " << argv[0] << " <command> <path>\n";
+  if (argc < 2) {
+    std::cout << "Please provide at least one command\n";
     return 1;
   }
 
