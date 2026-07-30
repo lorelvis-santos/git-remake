@@ -4,6 +4,7 @@
 #include "cli/ArgumentValidation.h"
 #include "commands/HashObjectCommand.h"
 #include "commands/CatFileCommand.h"
+#include "commands/WriteTreeCommand.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -40,6 +41,10 @@ int main(int argc, char** argv) {
 
   CommandFactory::register_command("cat-file", []() {
     return std::make_unique<CatFileCommand>();
+  });
+
+  CommandFactory::register_command("write-tree", []() {
+    return std::make_unique<WriteTreeCommand>();
   });
 
   auto command = CommandFactory::create(argv[1]);
