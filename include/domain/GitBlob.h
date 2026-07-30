@@ -18,6 +18,10 @@ class GitBlob {
       return this->data;
     }
     
+    const std::array<uint8_t, 32>& get_hash_bytes() const {
+      return this->hash;
+    }
+    
     std::string get_hash() const;
 
     bool is_valid() const {

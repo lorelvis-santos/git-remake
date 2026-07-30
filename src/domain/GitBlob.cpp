@@ -48,8 +48,6 @@ bool GitBlob::save() const {
     return false;
   }
 
-  // std::cout << "Se comprimió el archivo de " << this->data.size() << " bytes a " << compressed.value().size() << " bytes\n";
-
   if (!FileSystem::write_object(this->get_hash(), compressed.value())) {
     return false;
   }
