@@ -3,7 +3,9 @@
 #include <optional>
 #include <array>
 #include <cstdint>
+#include <string>
 
 namespace Crypto {
   std::optional<std::array<uint8_t, 32>> sha256(const uint8_t* data, size_t size);
+  std::string to_string(const uint8_t* bytes, size_t size);
 }

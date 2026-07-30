@@ -1,6 +1,9 @@
 #include "core/Crypto.h"
 #include <openssl/evp.h>
 #include <memory>
+#include <sstream>
+#include <iomanip>
+#include <vector>
 
 namespace Crypto {
   std::optional<std::array<uint8_t, 32>> sha256(const uint8_t* data, size_t size) {
@@ -32,5 +35,13 @@ namespace Crypto {
     std::copy(std::begin(hash), hash + length, bytes.begin());
     
     return bytes;
+  }
+
+  std::string to_string(const uint8_t* bytes, size_t size) {
+    std::stringstream ss;
+    for (unsigned int i = 0; i < size; ++i) {
+      ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bytes[i]);
+    }
+    return ss.str();
   }
 }
