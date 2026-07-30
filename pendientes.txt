@@ -1,0 +1,8 @@
+Aquí desglosaré la lista de cosas por hacer, teniendo en cuenta que mi intención con el proyecto ahora mismo 
+es poder crear el flujo de git completo de forma liviana. Ya a partir de ahí lo optimizaré para trabajar
+con archivos y repositorios mas grandes. 
+
+Cosas que debo implementar más adelante:
+  1. Optimización del hash-object para que trabaje con streaming en vez de cargar en memoria. Es decir,
+     actualmente en vez de procesar "al vuelo" un archivo de 2gb, lo carga en memoria 3 veces, requiriendo
+     6gb de memoria RAM.
