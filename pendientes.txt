@@ -2,7 +2,14 @@ Aquí desglosaré la lista de cosas por hacer, teniendo en cuenta que mi intenci
 es poder crear el flujo de git completo de forma liviana. Ya a partir de ahí lo optimizaré para trabajar
 con archivos y repositorios mas grandes. 
 
-Cosas que debo implementar más adelante:
+Cosas que debo implementar (corto plazo):
+  1. Refactorizar funciones comunes del dominio en una clase GitObject. Por ejemplo, el método save.
+     Para guardar contexto: deberé de implementar una función virtual para la obtención del hash y de 
+     los datos crudos que se deben comprimir y enviar a write_object.
+  2. Refactorizar GitBlob para invertir el trabajo desde el comando en vez del objeto. Asi como se hizo con
+     GitTree.
+
+Cosas que debo implementar (mediano plazo):
   1. Optimización del hash-object para que trabaje con streaming en vez de cargar en memoria. Es decir,
      actualmente en vez de procesar "al vuelo" un archivo de 2gb, lo carga en memoria 3 veces, requiriendo
      6gb de memoria RAM.
