@@ -9,7 +9,7 @@
 
 CommandSpec CatFileCommand::get_command_spec() const {
   return {
-    {},
+    {"f", "full"},
     {},
     1,
     1
@@ -49,7 +49,7 @@ int CatFileCommand::execute(const CommandArguments& args) {
 
   if (it != bytes.end()) {
     // Para omitir el byte nulo
-    auto payload_start = it + 1;
+    auto payload_start = (args.has_flag("f") || args.has_flag("full")) ? bytes.begin() : it + 1;
     size_t payload_size = std::distance(payload_start, bytes.end());
     std::cout.write(reinterpret_cast<const char*>(&*payload_start), payload_size);
     std::cout << '\n';
