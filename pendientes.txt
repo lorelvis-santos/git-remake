@@ -8,6 +8,7 @@ Cosas que debo implementar (corto plazo):
      los datos crudos que se deben comprimir y enviar a write_object.
   2. Refactorizar GitBlob para invertir el trabajo desde el comando en vez del objeto. Asi como se hizo con
      GitTree.
+  3. Implementar GitCommit.
 
 Cosas que debo implementar (mediano plazo):
   1. Optimización del hash-object para que trabaje con streaming en vez de cargar en memoria. Es decir,
