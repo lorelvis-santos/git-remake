@@ -17,6 +17,40 @@ bool is_executable(const fs::directory_entry& entry) {
   return !entry.is_directory() && (p & (fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec)) != fs::perms::none;
 }
 
+std::optional<std::array<uint8_t, 32>> build_blob(fs::path target_file_path) {
+  std::optional<std::vector<uint8_t>> file = FileSystem::read_file(target_file_path);
+
+  if (!file) {
+    return std::nullopt;
+  }
+
+  GitBlob blob(std::move(file.value()));
+
+  auto buffer = std::move(blob).serialize();
+
+  std::optional<std::array<uint8_t, 32>> hash_success = Crypto::sha256(buffer.data(), buffer.size());
+
+  if (!hash_success) {
+    return std::nullopt;
+  }
+
+  auto hash_bytes = hash_success.value();
+  std::string hash = Crypto::to_string(hash_bytes.data(), hash_bytes.size());
+
+  // Ahora toca comprimir el contenido
+  std::optional<std::vector<uint8_t>> compressed = Compression::compress_blob(buffer.data(), buffer.size());
+
+  if (!compressed) {
+    return std::nullopt;
+  }
+
+  if (!FileSystem::write_object(Crypto::to_string(hash_bytes.data(), hash_bytes.size()), compressed.value())) {
+    return std::nullopt;
+  }
+
+  return hash_bytes;
+}
+
 std::optional<std::array<uint8_t, 32>> build_tree(GitTree& tree) {
   // obtenemos el buffer del tree
   std::vector<uint8_t> buffer = tree.serialize();
@@ -74,16 +108,21 @@ std::optional<std::array<uint8_t, 32>> build_tree_recursive(fs::path target_dir_
     auto entry_path = entry.path();
     auto entry_filename = entry_path.filename();
 
-    GitBlob blob(entry_path.string());
-    blob.save();
+    auto blob_creation_result = build_blob(entry_path);
+
+    if (!blob_creation_result) {
+      return std::nullopt;
+    }
+
+    auto blob_hash_bytes = blob_creation_result.value();
 
     if (is_executable(entry)) {
-      tree.add_entry(TREE_EXECUTABLE_FILE_MODE, entry_filename, blob.get_hash_bytes());
+      tree.add_entry(TREE_EXECUTABLE_FILE_MODE, entry_filename, blob_hash_bytes);
       continue;
     }
 
     // si no es dir, ni es ejecutable, es regular
-    tree.add_entry(TREE_REGULAR_FILE_MODE, entry_filename, blob.get_hash_bytes());
+    tree.add_entry(TREE_REGULAR_FILE_MODE, entry_filename, blob_hash_bytes);
   }
 
   auto result = build_tree(tree);

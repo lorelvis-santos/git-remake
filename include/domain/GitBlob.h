@@ -8,25 +8,9 @@
 
 class GitBlob {
   private:
-    std::vector<uint8_t> data;
-    std::array<uint8_t, 32> hash;
+  std::vector<uint8_t> bytes;
 
   public:
-    GitBlob(const std::string_view path);
-
-    const std::vector<uint8_t>& get_data() const {
-      return this->data;
-    }
-    
-    const std::array<uint8_t, 32>& get_hash_bytes() const {
-      return this->hash;
-    }
-    
-    std::string get_hash() const;
-
-    bool is_valid() const {
-      return !this->data.empty();
-    }
-
-    bool save() const;
+    GitBlob(std::vector<uint8_t> bytes);
+    std::vector<uint8_t> serialize() &&;
 };
