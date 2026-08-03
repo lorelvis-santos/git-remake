@@ -1,4 +1,4 @@
-#include "domain/GitBlob.h"
+#include "domain/Blob.h"
 #include "core/FileSystem.h"
 #include "core/Crypto.h"
 #include "core/Compression.h"
@@ -9,11 +9,11 @@
 #include <algorithm>
 #include <optional>
 
-GitBlob::GitBlob(std::vector<uint8_t> bytes) {
+Git::Blob::Blob(std::vector<uint8_t> bytes) {
   this->bytes = std::move(bytes);
 }
 
-std::vector<uint8_t> GitBlob::serialize() && {
+std::vector<uint8_t> Git::Blob::serialize() && {
   std::vector<uint8_t> buffer;
 
   std::string header = "blob " + std::to_string(this->bytes.size());

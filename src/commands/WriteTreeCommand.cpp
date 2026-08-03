@@ -1,6 +1,6 @@
 #include "commands/WriteTreeCommand.h"
-#include "domain/GitTree.h"
-#include "domain/GitBlob.h"
+#include "domain/Tree.h"
+#include "domain/Blob.h"
 #include "core/StringUtils.h"
 #include "core/Crypto.h"
 #include "core/Compression.h"
@@ -24,7 +24,7 @@ std::optional<std::array<uint8_t, 32>> build_blob(fs::path target_file_path) {
     return std::nullopt;
   }
 
-  GitBlob blob(std::move(file.value()));
+  Git::Blob blob(std::move(file.value()));
 
   auto buffer = std::move(blob).serialize();
 
@@ -51,7 +51,7 @@ std::optional<std::array<uint8_t, 32>> build_blob(fs::path target_file_path) {
   return hash_bytes;
 }
 
-std::optional<std::array<uint8_t, 32>> build_tree(GitTree& tree) {
+std::optional<std::array<uint8_t, 32>> build_tree(Git::Tree& tree) {
   // obtenemos el buffer del tree
   std::vector<uint8_t> buffer = tree.serialize();
 
@@ -82,7 +82,7 @@ std::optional<std::array<uint8_t, 32>> build_tree(GitTree& tree) {
 }
 
 std::optional<std::array<uint8_t, 32>> build_tree_recursive(fs::path target_dir_path) {
-  GitTree tree;
+  Git::Tree tree;
 
   for (const auto& entry : fs::directory_iterator(target_dir_path)) {
     if ((entry.is_directory() &&
@@ -143,7 +143,7 @@ CommandSpec WriteTreeCommand::get_command_spec() const {
   };
 }
 
-int WriteTreeCommand::execute(const CommandArguments& args) {
+int WriteTreeCommand::execute(const CommandArguments& /* args */) {
   auto result = build_tree_recursive(".");
 
   if (!result) {

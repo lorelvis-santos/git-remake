@@ -1,16 +1,16 @@
-#include "domain/GitTree.h"
+#include "domain/Tree.h"
 #include "core/Crypto.h"
 #include "core/Compression.h"
 #include "core/FileSystem.h"
 #include <algorithm>
 
-GitTree::GitTree() {
+Git::Tree::Tree() {
   this->entries = {};
 }
 
 // Metodos publicos
 
-void GitTree::add_entry(const std::string& mode, const std::string& name, const std::array<uint8_t, 32>& hash) {
+void Git::Tree::add_entry(const std::string& mode, const std::string& name, const std::array<uint8_t, 32>& hash) {
   this->entries.emplace_back(TreeEntry {
     mode,
     name,
@@ -22,7 +22,7 @@ void GitTree::add_entry(const std::string& mode, const std::string& name, const 
 
 // Transforma los entries en un bloque contiguo en la memoria bajo el formato
 // tree BYTES\0mode name\0size (y se repite)
-std::vector<uint8_t> GitTree::serialize() {
+std::vector<uint8_t> Git::Tree::serialize() {
   // Ordenar los entries por el nombre
   std::sort(this->entries.begin(), this->entries.end(), [](const TreeEntry& a, const TreeEntry& b) {
     return a.name < b.name;

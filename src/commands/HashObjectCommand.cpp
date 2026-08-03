@@ -1,12 +1,11 @@
 #include "commands/HashObjectCommand.h"
-#include "domain/GitBlob.h"
+#include "domain/Blob.h"
 #include "core/StringUtils.h"
 #include "core/FileSystem.h"
 #include "core/Crypto.h"
 #include "core/Compression.h"
 #include <iostream>
 #include <algorithm>
-
 #include <vector>
 
 namespace str = StringUtils;
@@ -35,7 +34,7 @@ int HashObjectCommand::execute(const CommandArguments& args) {
     return 1;
   }
 
-  GitBlob blob(std::move(file.value()));
+  Git::Blob blob(std::move(file.value()));
   auto buffer = std::move(blob).serialize();
 
   std::optional<std::array<uint8_t, 32>> hash_success = Crypto::sha256(buffer.data(), buffer.size());
