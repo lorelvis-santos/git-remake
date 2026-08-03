@@ -26,6 +26,5 @@ namespace Git {
 
     private:
       std::vector<TreeEntry> entries; // esta es la unica fuente de la verdad en GitTree, en GitBlob es la data del blob
-      std::array<uint8_t, 32> hash;
   };
 }
