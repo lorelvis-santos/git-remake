@@ -1,4 +1,3 @@
-#include "domain/GitBlob.h"
 #include "cli/CommandFactory.h"
 #include "cli/ArgumentParser.h"
 #include "cli/ArgumentValidation.h"
@@ -13,14 +12,14 @@
 #include <string>
 
 constexpr std::string_view to_string(ArgumentValidation::ValidationError error) {
-    switch (error) {
-        case ArgumentValidation::ValidationError::None:                return "None";
-        case ArgumentValidation::ValidationError::MissingOption:       return "MissingOption";
-        case ArgumentValidation::ValidationError::InvalidOption:       return "InvalidOption";
-        case ArgumentValidation::ValidationError::InvalidFlag:         return "InvalidFlag";
-        case ArgumentValidation::ValidationError::InvalidOperandCount: return "InvalidOperandCount";
-        default:                                   return "UnknownError";
-    }
+  switch (error) {
+    case ArgumentValidation::ValidationError::None:                return "None";
+    case ArgumentValidation::ValidationError::MissingOption:       return "MissingOption";
+    case ArgumentValidation::ValidationError::InvalidOption:       return "InvalidOption";
+    case ArgumentValidation::ValidationError::InvalidFlag:         return "InvalidFlag";
+    case ArgumentValidation::ValidationError::InvalidOperandCount: return "InvalidOperandCount";
+    default: return "UnknownError";
+  }
 }
 
 // Sobrecarga opcional para usar directamente con std::cout
@@ -72,17 +71,6 @@ int main(int argc, char** argv) {
   }
 
   command->execute(args); // TODO: Manejar el retorno del execute
-
-  // std::string_view path = "src/main.cpp";
-  // GitBlob blob(path);
-
-  // if (!blob.is_valid()) {
-  //   std::cerr << "El blob no es válido" << std::endl;
-  //   return 1;
-  // }
-
-  // std::cout << "Blob de " << path << ":\n" << std::string(blob.get_data().begin(), blob.get_data().end()) << std::endl;
-  // std::cout << "Hash de " << path << ":\n" << blob.get_hash() << std::endl;
 
   return 0;
 }
