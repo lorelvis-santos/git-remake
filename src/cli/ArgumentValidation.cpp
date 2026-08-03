@@ -63,7 +63,9 @@ namespace ArgumentValidation {
 
     return ValidationResult {
       true,
-      ValidationError::None
+      ValidationError::None,
+      "",
+      ""
     };
   }
 }
